@@ -1,0 +1,28 @@
+# Binaries
+bin/
+searchjet
+*.exe
+
+# Go
+vendor/
+coverage.txt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config (local override)
+config.yaml
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local

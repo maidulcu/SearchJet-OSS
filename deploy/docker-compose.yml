@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  searchjet:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SEARCHJET_SERVER_HOST=0.0.0.0
+      - SEARCHJET_SERVER_PORT=8080
+      - SEARCHJET_MEILISEARCH_HOST=http://meilisearch:7700
+      - SEARCHJET_MEILISEARCH_INDEX=uae-search
+    depends_on:
+      - meilisearch
+    networks:
+      - searchjet
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    ports:
+      - "7700:7700"
+    environment:
+      - MEILI_ENV=development
+      - MEILI_MASTER_KEY=masterKey
+    networks:
+      - searchjet
+    volumes:
+      - meilisearch_data:/meili_data
+
+networks:
+  searchjet:
+    driver: bridge
+
+volumes:
+  meilisearch_data:
