@@ -6,8 +6,8 @@ Thanks for your interest in contributing!
 
 ```bash
 # Clone the repo
-git clone https://github.com/uae-search-oss/uae-search-oss.git
-cd uae-search-oss
+git clone https://github.com/maidulcu/SearchJet-OSS.git
+cd SearchJet-OSS
 
 # Run tests
 make test

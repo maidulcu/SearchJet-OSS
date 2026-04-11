@@ -26,3 +26,6 @@ config.yaml
 # Environment
 .env
 .env.local
+
+# Internal docs (not for public)
+.internal/
