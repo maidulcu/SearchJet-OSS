@@ -1,0 +1,145 @@
+replicaCount: 1
+
+image:
+  repository: searchjet-oss/searchjet
+  pullPolicy: IfNotPresent
+  tag: "0.1.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 8080
+  metricsPort: 8080
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+  hosts:
+    - host: searchjet.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: searchjet-tls
+      hosts:
+        - searchjet.local
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+config:
+  server:
+    host: "0.0.0.0"
+    port: 8080
+  meilisearch:
+    host: "http://meilisearch"
+    apiKey: "masterKey"
+    index: "uae-search"
+  pdpl:
+    retentionDays: 90
+    analyticsDays: 365
+
+meilisearch:
+  enabled: true
+  fullnameOverride: searchjet-meilisearch
+  image:
+    repository: getmeili/meilisearch
+    tag: v1.12
+  service:
+    port: 7700
+  persistence:
+    enabled: true
+    size: 10Gi
+  env:
+    - name: MEILI_ENV
+      value: "production"
+    - name: MEILI_MASTER_KEY
+      valueFrom:
+        secretKeyRef:
+          name: searchjet-secret
+          key: meilisearch-key
+          optional: false
+
+redis:
+  enabled: true
+  fullnameOverride: searchjet-redis
+  image:
+    repository: redis
+    tag: 7-alpine
+  service:
+    port: 6379
+  persistence:
+    enabled: true
+    size: 1Gi
+
+prometheus:
+  enabled: true
+  fullnameOverride: searchjet-prometheus
+  image:
+    repository: prom/prometheus
+    tag: latest
+  service:
+    port: 9090
+  persistence:
+    enabled: true
+    size: 5Gi
+
+grafana:
+  enabled: true
+  fullnameOverride: searchjet-grafana
+  image:
+    repository: grafana/grafana
+    tag: latest
+  service:
+    port: 3000
+  adminUser: admin
+  adminPassword: ""
+  persistence:
+    enabled: true
+    size: 1Gi

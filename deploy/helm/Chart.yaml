@@ -1,0 +1,15 @@
+apiVersion: v2
+name: searchjet
+description: A cloud-native, bilingual search engine for the UAE
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - search
+  - arabic
+  - uae
+  - meilisearch
+  - pdpl
+maintainers:
+  - name: SearchJet Team
+    email: team@searchjet.ae

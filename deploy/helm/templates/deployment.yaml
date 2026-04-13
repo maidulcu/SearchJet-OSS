@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "searchjet.fullname" . }}
+  labels:
+    {{- include "searchjet.labels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "searchjet.fullname" . }}
+  labels:
+    {{- include "searchjet.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: {{ .Values.service.metricsPort }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "searchjet.selectorLabels" . | nindent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "searchjet.fullname" . }}
+  labels:
+    {{- include "searchjet.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "searchjet.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+      labels:
+        {{- include "searchjet.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "searchjet.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: searchjet
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.server.port }}
+              protocol: TCP
+            - name: metrics
+              containerPort: 8081
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+          env:
+            - name: SEARCHJET_SERVER_HOST
+              value: {{ .Values.config.server.host | quote }}
+            - name: SEARCHJET_SERVER_PORT
+              value: {{ .Values.config.server.port | quote }}
+            - name: SEARCHJET_MEILISEARCH_HOST
+              value: {{ .Values.config.meilisearch.host | quote }}
+            - name: SEARCHJET_MEILISEARCH_API_KEY
+              value: {{ .Values.config.meilisearch.apiKey | quote }}
+            - name: SEARCHJET_MEILISEARCH_INDEX
+              value: {{ .Values.config.meilisearch.index | quote }}
+            - name: SEARCHJET_PDPL_RETENTION_DAYS
+              value: {{ .Values.config.pdpl.retentionDays | quote }}
+            - name: SEARCHJET_PDPL_ANALYTICS_DAYS
+              value: {{ .Values.config.pdpl.analyticsDays | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 10 }}
